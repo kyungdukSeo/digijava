@@ -6,12 +6,19 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -59,6 +66,9 @@ class NetworkSimulator extends JFrame implements ActionListener
 		private JScrollPane displayScroll;
 		private JTextArea display;
 		private JPanel filePanel;
+			private JButton[] fileButton; 
+			private JButton saveButton;
+			private JFileChooser fc;
 		
 	private JPanel tailPanel;
 		private JSpinner sleepSpinner;
@@ -110,19 +120,35 @@ class NetworkSimulator extends JFrame implements ActionListener
 	}
 	
 	
+	public JCheckBox getReceiveClient() {
+		return receiveClient;
+	}
+
+	
+	public JCheckBox getCheckRandom() {
+		return checkRandom;
+	}
+
+
+	public boolean isUdpClientMode() {
+		return isUdpClientMode;
+	}
+	public void setUdpClientMode(boolean isUdpClientMode) {
+		this.isUdpClientMode = isUdpClientMode;
+	}
+
+
 	public JTextArea getDisplay() {
 		return display;
 	}
-
 	public void setDisplay(JTextArea display) {
 		this.display = display;
 	}
 
+	
 	public JTextField getInputIP() {
 		return inputIP;
 	}
-
-
 	public JTextField getInputPort() {
 		return inputPort;
 	}
@@ -131,8 +157,14 @@ class NetworkSimulator extends JFrame implements ActionListener
 	public JTable getTable() {
 		return table;
 	}
+	public void setTable(JTable table) {
+		this.table = table;
+	}
 
 
+	public void setTableModel(DefaultTableModel tableModel) {
+		this.tableModel = tableModel;
+	}
 	public DefaultTableModel getTableModel() {
 		return tableModel;
 	}
@@ -142,7 +174,17 @@ class NetworkSimulator extends JFrame implements ActionListener
 		return tableNo;
 	}
 
+	
+	
+	public JSpinner getSleepSpinner() {
+		return sleepSpinner;
+	}
+	public JSpinner getCountSpinner() {
+		return countSpinner;
+	}
 
+
+	
 	public void setDefaultUDPClient()
 	{
 		tableNo = 0;
@@ -178,7 +220,7 @@ class NetworkSimulator extends JFrame implements ActionListener
 		tailPanel.add(new JLabel("Repeat Count"));
 		tailPanel.add(countSpinner);
 		
-		tailPanel.add(new JLabel("Random"));
+		tailPanel.add(new JLabel("Random(File)"));
 		checkRandom = new JCheckBox();
 		
 		sendBtn = new JButton("Send");
@@ -189,8 +231,6 @@ class NetworkSimulator extends JFrame implements ActionListener
 		
 		tailPanel.add(checkRandom);
 		tailPanel.add(sendBtn);
-		
-		
 		
 	}
 	
@@ -236,14 +276,22 @@ class NetworkSimulator extends JFrame implements ActionListener
 		Border border = BorderFactory.createTitledBorder("File Select");
 		filePanel.setBorder(border);
 		
-		filePanel.add(new JButton("Test Button"));
-		filePanel.add(new JButton("Test Button"));
-		filePanel.add(new JButton("Test Button"));
-		filePanel.add(new JButton("Test Button"));
-		filePanel.add(new JButton("Test Button"));
-		filePanel.add(new JButton("Test Button"));
+		// int[] lotto = new int[6];
+		// JButton[] fileButton = new JButton[6];
+		
+		fileButton = new JButton[6];
+		for(int i=0; i<fileButton.length; i++)
+		{
+			fileButton[i] = new JButton("File " + (i+1));
+			fileButton[i].addActionListener(this);
+			filePanel.add(fileButton[i]);
+		}
+
 		filePanel.add(new JLabel(""));
-		filePanel.add(new JButton("Test Button"));
+		
+		saveButton = new JButton("Save");
+		saveButton.addActionListener(this);
+		filePanel.add(saveButton);
 		
 		bodyPanel.add(filePanel, BorderLayout.EAST);
 		
@@ -258,7 +306,17 @@ class NetworkSimulator extends JFrame implements ActionListener
 		userColumn.addElement("Port");
 		userColumn.addElement("Messages");
 		
-		tableModel = new DefaultTableModel(userColumn, 0);
+		tableModel = new DefaultTableModel(userColumn, 0)
+		// 수정불가
+		{
+		    @Override
+		    public boolean isCellEditable(int row, int column) 
+		    {
+		       //all cells false
+		       return false;
+		    }
+		};
+		
 		table = new JTable(tableModel);
 	
 		table.setPreferredScrollableViewportSize(new Dimension(500,220));
@@ -492,10 +550,13 @@ class NetworkSimulator extends JFrame implements ActionListener
 		
 		while(true)
 		{
-			if(isRunning == false && udpClientReadyFlag == true)
+			// if(isRunning == false && udpClientReadyFlag == true)
+			if(isRunning == false)
 			{
-				UDPClient udpClient = new UDPClient(this);
 				isRunning = true;
+				UDPClient udpClient = new UDPClient(this);
+				System.out.println("Create UDP Client...");
+				// isRunning = true;
 			}
 
 			try {
@@ -549,6 +610,13 @@ class NetworkSimulator extends JFrame implements ActionListener
 			// 현재 상태
 			printStatus();
 			doStart();
+			
+			/*
+			if(getReceiveClient().isSelected() == true)
+			{
+				UDPClient.receive();
+			}
+			*/
 		}
 		
 		if(e.getSource() == sendBtn )
@@ -556,6 +624,112 @@ class NetworkSimulator extends JFrame implements ActionListener
 			// 데이터 전송.. 메시지 읽어서 보내기..
 			udpClientReadyFlag = true;
 		}
+		
+		fileControl(e);
+		
+	}
+	
+	
+	
+	public void fileControl(ActionEvent e)
+	{
+		for(int i=0; i<6; i++)
+		{
+			if(e.getSource() == fileButton[i])
+			{
+				FileReader in = null;
+				BufferedReader br = null;
+				
+				String fileContents = "";
+				String path = "d:/kbstar/" + (i+1) + ".txt";
+				
+				try {
+					in = new FileReader(path);
+					br = new BufferedReader(in);
+					
+					String line = "";
+					display.setText("");
+					
+					while( (line = br.readLine()) != null )
+					{
+						display.append(line + "\n");
+					}
+					
+				} catch (Exception e2) {
+					// TODO: handle exception
+					
+				}
+				finally
+				{
+					try {
+						if(in != null)
+							in.close();
+						if(br != null)
+							br.close();
+					} catch (Exception e3) {
+						// TODO: handle exception
+					}
+				}
+				
+			}
+		}
+		
+		if(e.getSource() == saveButton )
+		{
+			fc = new JFileChooser();
+			fc.setCurrentDirectory(new File("D:\\kbstar"));
+			
+			int result;
+			result = fc.showSaveDialog(this);
+			
+			if(result == JFileChooser.APPROVE_OPTION)
+			{
+				// System.out.printf("result = %02d\n", result);
+				FileWriter out = null;
+				BufferedWriter bw = null;
+				String fileContents = display.getText();
+				
+				String path = fc.getSelectedFile().getPath();
+				System.out.println("Save File = " + path);
+				
+				try {
+					out = new FileWriter(path);
+					bw = new BufferedWriter(out);
+					
+					// bw = new BufferedWriter(new FileWriter(path))
+					
+					StringTokenizer st = new StringTokenizer(fileContents, "\n");
+					while(st.hasMoreTokens())
+					{
+						bw.write(st.nextToken());
+						bw.newLine();
+						bw.flush();
+						
+					}
+				} catch (Exception e2) {
+					// TODO: handle exception
+					System.out.println("Exception = " + e2.getMessage());
+				}
+				finally
+				{
+					try {
+						if(out != null)
+						{
+							out.close();
+							// System.out.println("out =" + out);
+						}
+						if(bw != null)
+						{
+							bw.close();
+						}
+					} catch (Exception e3) {
+						// TODO: handle exception
+					}
+				}
+				
+			}
+		}
+		
 		
 	}
 	

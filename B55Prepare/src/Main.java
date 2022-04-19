@@ -4,7 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-// 52 DataBase
+// 55 Prepare
 
 public class Main 
 {
@@ -24,7 +24,7 @@ public class Main
 		
 		System.out.println("Start DB : 한글");
 		Connection conn = null;
-		PreparedStatement ps = null;
+		PreparedStatement pstmt = null;
 		
 		// $data = mysqli_fetch_array();
 		ResultSet rs = null;
@@ -57,11 +57,56 @@ public class Main
 		String sql;
 		
 		try {
-			stmt = conn.createStatement();
-			sql = "insert into online (id, name, age, address) values ('kbstar', '국민은행', '33', '서울')";
-			int affectedCount = stmt.executeUpdate(sql);
 			
-			System.out.println("affectedCount = " + affectedCount);
+			String id = "mytestid";
+			String name = "내이름테스트";
+			int age = 65;
+			String address = "테스트주소";
+			
+			sql = "insert into online (id, name, age, address) values (?,?,?,?)";
+			pstmt = conn.prepareStatement(sql);
+					
+			pstmt.setString(1, id);
+			pstmt.setString(2, name);
+			pstmt.setString(3, Integer.toString(age));
+			pstmt.setString(4, address);
+			
+			pstmt.executeUpdate();
+			
+			stmt = conn.createStatement();
+
+			
+			// sql = "select * from online";
+			// int affectedCount = stmt.executeUpdate(sql);
+			
+			//rs = stmt.executeQuery(sql);
+			// ResultSet ==> fetch
+			// $data = mysqli_fetch_array($result);
+			// while($data){}
+			
+			/*
+			int count = 0;
+			while(rs.next())
+			{
+				// 출력, idx, id, name, age, address
+				int idx = rs.getInt("idx");
+				String id = rs.getString("id");
+				String name = rs.getString("name");
+				int age = rs.getInt("age");
+				String address = rs.getString("address");
+				
+				System.out.print("idx = " + idx + "\t\t");
+				System.out.print("id = " + id + "\t");
+				System.out.print("name = " + name + "\t");
+				System.out.print("age = " + age + "\t");
+				System.out.println("address = " + address);
+				
+				String dbResult = "";
+				dbResult = dbResult.format(name + "\t" + id + "\t" + age + "\t" + address);
+				System.out.println(dbResult);
+						
+			}
+			*/
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			
@@ -75,7 +120,6 @@ public class Main
 	}
 
 }
-
 
 /*
 create table online (

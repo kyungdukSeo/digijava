@@ -146,11 +146,11 @@ class MyFrame extends JFrame implements ActionListener
 		// 서버(수신)
 		while(true)
 		{
-			byte[] buffer = new byte[1204];		// 2^n 2의 거듭제곱으로 만든다
+			byte[] buffer = new byte[1024];		// 2^n 2의 거듭제곱으로 만든다
 			packet = new DatagramPacket(buffer, buffer.length);
 			try {
 				System.out.println("wait..");
-				socket.receive(packet);
+				socket.receive(packet);	
 				System.out.println("receive..");
 				
 				int nextTableNo = table.getRowCount() + 1;
@@ -164,7 +164,7 @@ class MyFrame extends JFrame implements ActionListener
 				
 				// display.append("KBStar << " + new String(buffer) + "\n");
 				// display.setCaretPosition(display.getDocument().getLength());
-				
+
 			} catch (Exception e) {
 				// TODO: handle exception
 			}

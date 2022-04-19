@@ -4,7 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-// 52 DataBase
+// 54 Select
 
 public class Main 
 {
@@ -59,9 +59,38 @@ public class Main
 		try {
 			stmt = conn.createStatement();
 			sql = "insert into online (id, name, age, address) values ('kbstar', '국민은행', '33', '서울')";
-			int affectedCount = stmt.executeUpdate(sql);
+
+			sql = "select * from online";
+			// int affectedCount = stmt.executeUpdate(sql);
 			
-			System.out.println("affectedCount = " + affectedCount);
+			rs = stmt.executeQuery(sql);
+			// ResultSet ==> fetch
+			// $data = mysqli_fetch_array($result);
+			// while($data){}
+			
+			
+			int count = 0;
+			while(rs.next())
+			{
+				// 출력, idx, id, name, age, address
+				int idx = rs.getInt("idx");
+				String id = rs.getString("id");
+				String name = rs.getString("name");
+				int age = rs.getInt("age");
+				String address = rs.getString("address");
+				
+				System.out.print("idx = " + idx + "\t\t");
+				System.out.print("id = " + id + "\t");
+				System.out.print("name = " + name + "\t");
+				System.out.print("age = " + age + "\t");
+				System.out.println("address = " + address);
+				
+				String dbResult = "";
+				dbResult = dbResult.format(name + "\t" + id + "\t" + age + "\t" + address);
+				System.out.println(dbResult);
+						
+			}
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			
@@ -75,7 +104,6 @@ public class Main
 	}
 
 }
-
 
 /*
 create table online (
